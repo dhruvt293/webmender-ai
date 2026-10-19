@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TechSpec Pro — Version B (Redesigned)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #fff7ed; color: #1a1a2e; }
+    header { background: #7c3aed; color: white; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    header h1 { font-size: 1.4rem; }
+    .nav { display: flex; gap: 1rem; padding: 1.5rem 2rem; border-bottom: 1px solid #e5e7eb; }
+    /* ⚠ BUTTON RENAMED — Original workflow will FAIL here */
+    /* Old: id="btn-specifications"  →  New: id="tech-details-btn", text = "Technical Details" */
+    #tech-details-btn { background: #7c3aed; color: white; border: none; padding: 0.6rem 1.4rem; border-radius: 20px; cursor: pointer; font-size: 0.95rem; font-weight: 600; }
+    #tech-details-btn:hover { background: #6d28d9; }
+    .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem; }
+    .card { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .spec-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+    .spec-table th { background: #7c3aed; color: white; padding: 0.75rem; text-align: left; }
+    .spec-table td { padding: 0.75rem; border-bottom: 1px solid #f3e8ff; }
+    .badge { display: inline-block; background: #fef3c7; color: #92400e; border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; font-weight: 700; }
+    footer { text-align: center; padding: 1rem; color: #888; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>🔷</div>
+    <h1>TechSpec Pro 2.0 <span class="badge">Version B — Redesigned ⚠</span></h1>
+  </header>
+
+  <div class="product-grid">
+    <div class="card">
+      <h2>Quantum X Pro Laptop</h2>
+      <p style="color:#555; margin: 0.5rem 0 1.5rem;">Redesigned product page — new navigation structure.</p>
+      <div class="nav" style="padding:0; margin-bottom:1rem;">
+        <!-- ⚠ OLD ID "btn-specifications" IS GONE — WebMender must discover this -->
+        <button id="tech-details-btn" onclick="showSpecs()">Technical Details</button>
+      </div>
+      <div id="spec-section" style="display:none">
+        <table class="spec-table">
+          <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>Processor</td><td>Intel Core Ultra 9 185H</td></tr>
+            <tr><td>RAM</td><td>32 GB LPDDR5x</td></tr>
+            <tr><td>Storage</td><td>2 TB NVMe Gen4</td></tr>
+            <tr><td>Display</td><td>15.6" 2.8K OLED 120Hz</td></tr>
+            <tr><td>GPU</td><td>NVIDIA RTX 4070</td></tr>
+            <tr><td>Battery</td><td>99.9Wh, 140W USB-C PD</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="background:#f5f3ff;">
+      <h3 style="color:#7c3aed;">⚠ Changes from Version A</h3>
+      <ul style="margin-top:1rem; line-height:2; color:#555; padding-left:1rem;">
+        <li><code>id</code> changed: <del>btn-specifications</del> → <code>tech-details-btn</code></li>
+        <li>Button label: <del>"Specifications"</del> → <strong>"Technical Details"</strong></li>
+        <li>Layout: tabs → product grid cards</li>
+        <li>Color scheme: indigo → violet</li>
+      </ul>
+      <p style="margin-top:1.5rem; background:#fef3c7; border-left:4px solid #f59e0b; padding:0.75rem; border-radius:4px; font-size:0.9rem;">
+        <strong>WebMender AI</strong> will detect these changes, propose a repair, and recover the workflow automatically.
+      </p>
+    </div>
+  </div>
+
+  <footer>Demo page for WebMender AI — Kritical Hacks 2026 · Version B (Modified Layout — triggers self-healing)</footer>
+
+  <script>
+    function showSpecs() {
+      document.getElementById('spec-section').style.display = 'block';
+      document.getElementById('tech-details-btn').textContent = '✅ Loaded';
+    }
+  </script>
+</body>
+</html>

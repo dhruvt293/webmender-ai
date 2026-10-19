@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TechSpec Pro — Version A (Original)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; color: #1a1a2e; }
+    header { background: #1a1a2e; color: white; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    header h1 { font-size: 1.4rem; }
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid #ddd; margin: 2rem 2rem 0; }
+    .tab { padding: 0.75rem 1.5rem; cursor: pointer; border: 1px solid transparent; border-bottom: none; font-weight: 600; color: #555; }
+    .tab.active { background: white; border-color: #ddd; color: #1a1a2e; border-radius: 6px 6px 0 0; }
+    .tab-content { background: white; margin: 0 2rem 2rem; border: 1px solid #ddd; border-top: none; border-radius: 0 6px 6px 6px; padding: 2rem; }
+    /* ⬇ THE BUTTON WEBMENDER'S WORKFLOW TARGETS */
+    #btn-specifications { background: #4f46e5; color: white; border: none; padding: 0.6rem 1.4rem; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 600; }
+    #btn-specifications:hover { background: #4338ca; }
+    .spec-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+    .spec-table th { background: #4f46e5; color: white; padding: 0.75rem; text-align: left; }
+    .spec-table td { padding: 0.75rem; border-bottom: 1px solid #eee; }
+    .spec-table tr:hover td { background: #f8f9ff; }
+    .badge { display: inline-block; background: #dcfce7; color: #166534; border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; font-weight: 700; }
+    footer { text-align: center; padding: 1rem; color: #888; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>🔷</div>
+    <h1>TechSpec Pro <span class="badge">Version A — Original</span></h1>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active">Overview</div>
+    <div class="tab">Reviews</div>
+  </div>
+
+  <div class="tab-content">
+    <h2>Quantum X Pro Laptop</h2>
+    <p style="color:#555; margin: 0.5rem 0 1.5rem;">Next-generation performance in a 15-inch chassis.</p>
+    <!-- 🎯 TARGET ELEMENT for WebMender's baseline workflow -->
+    <button id="btn-specifications" onclick="showSpecs()">Specifications</button>
+
+    <div id="spec-section" style="display:none">
+      <table class="spec-table">
+        <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Processor</td><td>Intel Core Ultra 9 185H</td></tr>
+          <tr><td>RAM</td><td>32 GB LPDDR5x</td></tr>
+          <tr><td>Storage</td><td>2 TB NVMe Gen4</td></tr>
+          <tr><td>Display</td><td>15.6" 2.8K OLED 120Hz</td></tr>
+          <tr><td>GPU</td><td>NVIDIA RTX 4070</td></tr>
+          <tr><td>Battery</td><td>99.9Wh, 140W USB-C PD</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Demo page for WebMender AI — Kritical Hacks 2026 · Version A (Original Layout)</footer>
+
+  <script>
+    function showSpecs() {
+      document.getElementById('spec-section').style.display = 'block';
+      document.getElementById('btn-specifications').textContent = '✅ Loaded';
+    }
+  </script>
+</body>
+</html>
