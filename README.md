@@ -23,7 +23,7 @@ diffs the DOM and screenshots with AI, repairs the broken locator, and verifies 
 
 ---
 
-## <img src="https://api.iconify.design/lucide:triangle-alert.svg?color=%23f59e0b" width="22" height="22" align="absmiddle" /> &nbsp;The Problem We're Solving
+## ⚡ The Problem We're Solving
 
 AI agents are increasingly expected to complete real-world tasks on the web: filling forms, collecting data, navigating portals. But the web is a moving target.
 
@@ -42,35 +42,34 @@ Day 7:  Same workflow    →  button[id="tech-details-btn"]     FAILS
 
 ---
 
-## <img src="https://api.iconify.design/lucide:boxes.svg?color=%236366f1" width="22" height="22" align="absmiddle" /> &nbsp;System Architecture
+## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    UI["React Dashboard\n(Workflow Visualizer · Repair Diff · Scorecard)"]
-    API["FastAPI Orchestrator\n/api/v1/workflows · /api/v1/repair · /api/v1/sessions"]
-    WR["Workflow Runner\n(Playwright Step Executor)"]
-    EC["Evidence Collector"]
-    DD["DOM Differ\n(difflib unified_diff)"]
-    SD["Screenshot Differ\n(PIL + NumPy)"]
-    RA["Repair Agent\n(GPT-4o Planner & Ranker)"]
-    TF["TinyFish Integration Layer"]
-    B["Browser API\n(Cloud CDP Session)"]
-    WA["Web Agent\n(Goal-directed SSE)"]
-    SF["Search + Fetch API\n(Doc retrieval & page parsing)"]
-    RV["Replay & Verification Engine"]
-    SC["Recovery Scorecard"]
+    subgraph FE["Frontend"]
+        DASH["React Dashboard\nWorkflow Visualizer · Repair Diff"]
+    end
 
-    UI <-->|REST / WebSocket| API
+    subgraph BE["Backend — FastAPI"]
+        API["Orchestrator\n/workflows · /repair · /sessions"]
+        WR["Workflow Runner\nPlaywright Executor"]
+        EC["Evidence Collector\nDOM · Screenshot · Error"]
+        RA["Repair Agent\nGPT-4o Planner & Ranker"]
+        RV["Replay & Verify Engine"]
+        SC["Recovery Scorecard"]
+    end
+
+    subgraph TF["TinyFish Layer"]
+        B["Browser API\nCloud CDP Session"]
+        WA["Web Agent\nGoal-directed SSE"]
+        SF["Search + Fetch\nDoc retrieval"]
+    end
+
+    DASH <-->|REST| API
     API --> WR
-    WR -->|FAILURE DETECTED| EC
-    EC --> DD
-    EC --> SD
-    DD --> RA
-    SD --> RA
-    RA --> TF
-    TF --> B
-    TF --> WA
-    TF --> SF
+    WR -->|FAILURE| EC
+    EC --> RA
+    RA --> B & WA & SF
     RA --> RV
     RV -->|PASS| SC
     RV -->|FAIL — retry| RA
@@ -78,30 +77,26 @@ graph TD
 
 ---
 
-## <img src="https://api.iconify.design/lucide:workflow.svg?color=%236366f1" width="22" height="22" align="absmiddle" /> &nbsp;The Self-Healing Pipeline
+## 🔄 The Self-Healing Pipeline
 
 ```mermaid
 flowchart TD
-    A["Browser Workflow Defined\n(Playwright Actions)"] --> B["Execute Workflow\nStep 1 → Step 2 → Step N"]
-    B -->|SUCCESS| C["Workflow Complete"]
-    B -->|FAILURE| D["Evidence Capture\nDOM Snapshot · Screenshot · Error + Selector"]
-    D --> E["TinyFish Browser API\nInspect Live Page — Fresh DOM + Screenshot"]
-    E --> F["Diff Engines"]
-    F --> G["DOM Differ\ndifflib.unified_diff()"]
-    F --> H["Screenshot Differ\nPIL ImageChops + NumPy"]
-    G --> I["LLM Repair Planner\nGPT-4o — DOM diff + screenshot score + error → candidates"]
-    H --> I
-    I -->|"confidence < 0.4"| J["Escalate\nCannot repair confidently — surface failure"]
-    I -->|"confidence ≥ 0.4"| K["Apply Best Candidate\nReplace broken selector"]
-    K --> L["Replay Workflow\nFrom failed step N"]
-    L -->|PASS| M["Recovery Scorecard\nLatency · Attempts · Locator changes · Output correctness"]
-    L -->|FAIL| N["Retry with next candidate\nUp to MAX_REPAIR_RETRIES"]
-    N --> K
+    A["Workflow Defined\nPlaywright Actions"] --> B["Execute Workflow\nStep 1 → Step N"]
+    B -->|Success| Z["Workflow Complete"]
+    B -->|Failure| C["Capture Evidence\nDOM · Screenshot · Selector · Error"]
+    C --> D["TinyFish Browser\nInspect Live Page"]
+    D --> E["Diff Engines\nDOM Differ + Screenshot Differ"]
+    E --> F["GPT-4o Repair Planner\nCandidates ranked by confidence"]
+    F -->|"confidence < 0.4"| G["Escalate\nSurface failure — do not guess"]
+    F -->|"confidence ≥ 0.4"| H["Apply Best Candidate\nReplace broken locator"]
+    H --> I["Replay Workflow\nFrom failed step"]
+    I -->|Pass| J["Recovery Scorecard\nLatency · Attempts · Correctness"]
+    I -->|Fail| H
 ```
 
 ---
 
-## <img src="https://api.iconify.design/simple-icons:fish.svg?color=%230ea5e9" width="22" height="22" align="absmiddle" /> &nbsp;TinyFish Integration — The Core Enabler
+## 🐟 TinyFish Integration — The Core Enabler
 
 WebMender AI integrates **all four TinyFish capabilities** as first-class infrastructure:
 
@@ -122,11 +117,11 @@ async for event in tinyfish.run_web_agent(
     print(event)   # SSE events: thought, action, observation, result
 ```
 
-> **Integration is functional, not cosmetic.** Every repair loop that involves a real website calls the TinyFish Browser API to capture evidence. For sites with unknown change patterns, the Web Agent is invoked to explore and discover paths autonomously.
+> **Integration is functional, not cosmetic.** Every repair loop calls the TinyFish Browser API to capture live evidence. For sites with unknown change patterns, the Web Agent is invoked to explore and discover paths autonomously.
 
 ---
 
-## <img src="https://api.iconify.design/lucide:folder-tree.svg?color=%2322c55e" width="22" height="22" align="absmiddle" /> &nbsp;Project Structure
+## 📁 Project Structure
 
 ```
 webmender-ai/
@@ -134,10 +129,8 @@ webmender-ai/
 ├── backend/                        # FastAPI Orchestration Server
 │   ├── app/
 │   │   ├── main.py                 # App entrypoint, CORS, router registration
-│   │   ├── core/
-│   │   │   └── config.py           # Pydantic settings (TinyFish keys, LLM config)
-│   │   ├── models/
-│   │   │   └── schemas.py          # All Pydantic schemas: Workflow, Failure, Repair, Scorecard
+│   │   ├── core/config.py          # Pydantic settings (TinyFish keys, LLM config)
+│   │   ├── models/schemas.py       # Workflow, Failure, Repair, Scorecard schemas
 │   │   ├── agents/
 │   │   │   └── repair_agent.py     # AI repair planner (LLM + evidence → candidates)
 │   │   ├── services/
@@ -146,34 +139,31 @@ webmender-ai/
 │   │   │   ├── dom_differ.py       # DOM snapshot diff engine
 │   │   │   └── screenshot_differ.py# Pixel-level screenshot comparison (PIL + NumPy)
 │   │   └── api/routes/
-│   │       ├── workflows.py        # POST /workflows/run, GET /workflows/definitions
-│   │       ├── repair.py           # GET /POST /repair/{session_id}
-│   │       ├── sessions.py         # GET /sessions/{session_id} — poll for scorecard
+│   │       ├── workflows.py        # POST /workflows/run
+│   │       ├── repair.py           # GET|POST /repair/{session_id}
+│   │       ├── sessions.py         # GET /sessions/{session_id}
 │   │       └── health.py           # GET /health
 │   ├── requirements.txt
 │   └── .env.example
 │
 ├── frontend/                       # React Dashboard (React Flow + Tailwind)
 │   └── src/
-│       ├── components/
-│       │   ├── dashboard/          # KPI cards, timeline, status indicators
-│       │   └── workflow/           # React Flow workflow visualizer
+│       ├── components/dashboard/   # KPI cards, timeline, status indicators
+│       ├── components/workflow/    # React Flow workflow visualizer
 │       ├── pages/                  # Dashboard, Sessions, Repair View
 │       └── hooks/                  # useWorkflow, useRepair, useScorecard
 │
-├── demo/                           # Controlled demo environment
-│   ├── pages/
-│   │   ├── version_a/index.html    # Original page — workflow succeeds
-│   │   └── version_b/index.html    # Modified page — triggers self-healing
-│   └── workflows/
-│       └── demo_spec_scraper.py    # End-to-end demo runner
+├── demo/
+│   ├── pages/version_a/index.html  # Original page — workflow succeeds
+│   ├── pages/version_b/index.html  # Modified page — triggers self-healing
+│   └── workflows/demo_spec_scraper.py
 │
 └── README.md
 ```
 
 ---
 
-## <img src="https://api.iconify.design/lucide:brain-circuit.svg?color=%23a855f7" width="22" height="22" align="absmiddle" /> &nbsp;AI/ML Architecture Deep Dive
+## 🧠 AI/ML Architecture Deep Dive
 
 ### Repair Agent Intelligence
 
@@ -189,43 +179,40 @@ EVIDENCE IN:
   └─ Screenshot diff score: 0.312 (31.2% visual change)
 
 LLM REASONING:
-  "The original button with id 'btn-specifications' and text 'Specifications' has been
-   replaced by a button with id 'tech-details-btn' and text 'Technical Details'.
-   This is a rename with high semantic equivalence. CSS selector #tech-details-btn
-   is the most reliable repair; text-based selector button:has-text('Technical Details')
-   is the fallback."
+  "The button 'Specifications' (id=btn-specifications) has been renamed to
+   'Technical Details' (id=tech-details-btn). High semantic equivalence.
+   CSS selector #tech-details-btn is the most reliable repair."
 
 CANDIDATES OUT (ranked by confidence):
-  1. CSS:   #tech-details-btn                              — confidence: 0.95
-  2. Text:  button:has-text("Technical Details")           — confidence: 0.88
-  3. XPath: //button[contains(text(),'Technical')]         — confidence: 0.71
+  1. CSS:   #tech-details-btn                        — confidence: 0.95
+  2. Text:  button:has-text("Technical Details")     — confidence: 0.88
+  3. XPath: //button[contains(text(),'Technical')]   — confidence: 0.71
 ```
 
 ### Multimodal Evidence Pipeline
 
 ```mermaid
-flowchart LR
-    SB["Screenshot Before"]
-    SA["Screenshot After"]
-    DB["DOM Snapshot Before"]
-    DA["DOM Snapshot After"]
+flowchart TD
+    subgraph Visual["Visual Signal"]
+        SB["Screenshot Before"] --> PIL["PIL ImageChops\nNumPy pixel analysis"]
+        SA["Screenshot After"] --> PIL
+        PIL --> DS["Diff Score  0.0 → 1.0"]
+    end
 
-    SB --> PIL["PIL ImageChops.difference()\nNumPy pixel analysis\nRegional change heatmap"]
-    SA --> PIL
-    PIL --> DS["Diff Score\n0.0 identical → 1.0 different"]
-
-    DB --> DIFF["difflib.unified_diff()\nNoise attribute stripping\nInteractive element extraction"]
-    DA --> DIFF
-    DIFF --> DD["Structured DOM Diff String"]
+    subgraph Structural["Structural Signal"]
+        DB["DOM Before"] --> UDIFF["difflib.unified_diff\nElement extraction"]
+        DA["DOM After"] --> UDIFF
+        UDIFF --> DD["Structured DOM Diff"]
+    end
 
     DS --> LLM["GPT-4o Repair Planner"]
     DD --> LLM
-    LLM --> OUT["JSON Repair Candidates\nlocator · confidence · reasoning"]
+    LLM --> OUT["Repair Candidates\nlocator · confidence · reasoning"]
 ```
 
 ---
 
-## <img src="https://api.iconify.design/lucide:layers.svg?color=%236366f1" width="22" height="22" align="absmiddle" /> &nbsp;Tech Stack
+## 🛠️ Tech Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
@@ -243,7 +230,7 @@ flowchart LR
 
 ---
 
-## <img src="https://api.iconify.design/lucide:terminal.svg?color=%2322c55e" width="22" height="22" align="absmiddle" /> &nbsp;Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -293,7 +280,7 @@ Visit `http://localhost:8000/api/docs` for the interactive Swagger UI.
 
 ---
 
-## <img src="https://api.iconify.design/lucide:plug-zap.svg?color=%230ea5e9" width="22" height="22" align="absmiddle" /> &nbsp;API Reference
+## 🔌 API Reference
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -302,41 +289,36 @@ Visit `http://localhost:8000/api/docs` for the interactive Swagger UI.
 | `GET` | `/api/v1/workflows/definitions` | List example workflow definitions |
 | `GET` | `/api/v1/sessions/{id}` | Poll for recovery scorecard |
 | `GET` | `/api/v1/repair/{id}` | Get repair plan details |
-| `POST` | `/api/v1/repair/{id}/accept` | Accept a repair and trigger replay |
+| `POST` | `/api/v1/repair/{id}/accept` | Accept repair and trigger replay |
 | `POST` | `/api/v1/repair/{id}/reject` | Reject repair — escalate as unrecoverable |
 
 ---
 
-## <img src="https://api.iconify.design/lucide:globe.svg?color=%2322c55e" width="22" height="22" align="absmiddle" /> &nbsp;Real-World Use Cases
+## 🌐 Real-World Use Cases
 
-**Enterprise QA Automation**
-Stop paying engineers to update selectors after every UI redesign. WebMender repairs them automatically and logs every change with a full audit trail.
+**Enterprise QA Automation** — Stop paying engineers to update selectors after every UI redesign. WebMender repairs them automatically and logs every change with a full audit trail.
 
-**Production AI Agents**
-Your GPT-powered web agent breaks every time the target website updates. WebMender wraps it with a reliability layer that self-heals in real time.
+**Production AI Agents** — Your GPT-powered web agent breaks every time a target website updates. WebMender wraps it with a reliability layer that self-heals in real time.
 
-**Web Scraping Pipelines**
-Data pipelines that break on layout changes get expensive fast. WebMender recovers them and emits structured change audit trails.
+**Web Scraping Pipelines** — Data pipelines that break on layout changes get expensive fast. WebMender recovers them and emits structured change audit trails.
 
-**Regression Testing**
-Catch unintended UI changes before your QA team does — by running WebMender as part of your CI/CD pipeline.
+**Regression Testing** — Catch unintended UI changes before your QA team does by running WebMender as part of your CI/CD pipeline.
 
 ---
 
-## <img src="https://api.iconify.design/lucide:map.svg?color=%23f59e0b" width="22" height="22" align="absmiddle" /> &nbsp;Roadmap
+## 📈 Roadmap
 
 ```mermaid
-flowchart LR
-    P1["Phase 1 — Hackathon MVP\nSingle workflow\nControlled demo pages\nLLM repair loop\nRecovery scorecard"]
-    P2["Phase 2 — Q1 2027\nWorkflow library\nConcurrent workflows\nRepair history DB\nGitHub Actions integration"]
-    P3["Phase 3 — Q3 2027\nSaaS platform\nTeam dashboards\nFine-tuned repair model\nChrome extension"]
-
+flowchart TD
+    P1["Phase 1 — Hackathon MVP\nSingle workflow · Controlled demo\nLLM repair loop · Recovery scorecard"]
+    P2["Phase 2 — Q1 2027\nWorkflow library · Repair history DB\nVS Code extension · GitHub Actions"]
+    P3["Phase 3 — Q3 2027\nSaaS platform · Fine-tuned repair model\nChrome extension · Enterprise SSO"]
     P1 --> P2 --> P3
 ```
 
 ---
 
-## <img src="https://api.iconify.design/lucide:trophy.svg?color=%23f59e0b" width="22" height="22" align="absmiddle" /> &nbsp;Built For
+## 🏆 Built For
 
 <div align="center">
 
