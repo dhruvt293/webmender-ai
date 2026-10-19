@@ -1,6 +1,6 @@
-# 🦾 WebMender AI — The Self-Healing Browser Agent
-
 <div align="center">
+
+# WebMender AI — The Self-Healing Browser Agent
 
 <img src="https://img.shields.io/badge/Track-AI%2FML-6366f1?style=for-the-badge&logo=robot&logoColor=white" />
 <img src="https://img.shields.io/badge/TinyFish-Integrated-0ea5e9?style=for-the-badge&logo=fish&logoColor=white" />
@@ -14,176 +14,103 @@
 
 <br />
 
-**WebMender AI** is a reliability layer for browser automation agents.  
-It detects when a workflow breaks, investigates the live page using TinyFish's cloud browser,  
-diffs the DOM and screenshots with AI, repairs the broken locator, and verifies the fix —  
+**WebMender AI** is a reliability layer for browser automation agents.
+It detects when a workflow breaks, investigates the live page using TinyFish's cloud browser,
+diffs the DOM and screenshots with AI, repairs the broken locator, and verifies the fix —
 **all without human intervention.**
 
 </div>
 
 ---
 
-## ⚡ The Problem We're Solving
+## <img src="https://api.iconify.design/lucide:triangle-alert.svg?color=%23f59e0b" width="22" height="22" align="absmiddle" /> &nbsp;The Problem We're Solving
 
 AI agents are increasingly expected to complete real-world tasks on the web: filling forms, collecting data, navigating portals. But the web is a moving target.
 
 ```
-Day 1:  workflow clicks  →  button[id="btn-specifications"]  ✅ Works
-Day 7:  Same workflow    →  button[id="tech-details-btn"]    ❌ FAILS
+Day 1:  workflow clicks  →  button[id="btn-specifications"]   WORKS
+Day 7:  Same workflow    →  button[id="tech-details-btn"]     FAILS
 ```
 
 | Traditional Automation | WebMender AI |
 |---|---|
-| 🔴 Breaks silently on selector changes | 🟢 Detects failure instantly |
-| 🔴 Requires manual inspection | 🟢 Inspects the live page autonomously |
-| 🔴 Engineer must rewrite the selector | 🟢 LLM proposes and ranks repair candidates |
-| 🔴 No evidence trail | 🟢 Full DOM diff + screenshot diff + audit log |
-| 🔴 Re-run fails again | 🟢 Replays and validates the repaired workflow |
+| Breaks silently on selector changes | Detects failure instantly |
+| Requires manual inspection | Inspects the live page autonomously |
+| Engineer must rewrite the selector | LLM proposes and ranks repair candidates |
+| No evidence trail | Full DOM diff + screenshot diff + audit log |
+| Re-run fails again | Replays and validates the repaired workflow |
 
 ---
 
-## 🏗️ System Architecture
+## <img src="https://api.iconify.design/lucide:boxes.svg?color=%236366f1" width="22" height="22" align="absmiddle" /> &nbsp;System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        WebMender AI Platform                        │
-│                                                                     │
-│  ┌──────────────┐    ┌────────────────────────────────────────┐    │
-│  │   React UI   │◄──►│         FastAPI Orchestrator           │    │
-│  │  Dashboard   │    │   /api/v1/workflows  /api/v1/repair    │    │
-│  │  Repair Diff │    └────────────┬───────────────────────────┘    │
-│  │  Scorecard   │                 │                                 │
-│  └──────────────┘    ┌────────────▼───────────────────────────┐    │
-│                       │         Workflow Runner                 │    │
-│                       │   (Playwright + Step Executor)         │    │
-│                       └────────────┬───────────────────────────┘    │
-│                                    │ FAILURE DETECTED               │
-│                       ┌────────────▼───────────────────────────┐    │
-│                       │        Evidence Collector               │    │
-│                       │  ┌──────────────┬──────────────┐       │    │
-│                       │  │  DOM Diff    │  Screenshot  │       │    │
-│                       │  │  Engine      │  Differ      │       │    │
-│                       │  └──────┬───────┴──────┬───────┘       │    │
-│                       └─────────┼──────────────┼───────────────┘    │
-│                                 │              │                     │
-│                       ┌─────────▼──────────────▼───────────────┐    │
-│                       │          Repair Agent (LLM Core)        │    │
-│                       │    GPT-4o Repair Planner & Ranker       │    │
-│                       └─────────────────┬───────────────────────┘    │
-│                                         │                           │
-│                       ┌─────────────────▼───────────────────────┐    │
-│                       │         TinyFish Integration Layer       │    │
-│                       │  ┌──────────┬────────────┬──────────┐   │    │
-│                       │  │ Browser  │ Web Agent  │ Search   │   │    │
-│                       │  │ (CDP)    │ (SSE)      │ & Fetch  │   │    │
-│                       │  └──────────┴────────────┴──────────┘   │    │
-│                       └─────────────────┬───────────────────────┘    │
-│                                         │                           │
-│                       ┌─────────────────▼───────────────────────┐    │
-│                       │    Replay & Verification Engine          │    │
-│                       │   (Re-run → Assert → Recovery Scorecard) │    │
-│                       └──────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    UI["React Dashboard\n(Workflow Visualizer · Repair Diff · Scorecard)"]
+    API["FastAPI Orchestrator\n/api/v1/workflows · /api/v1/repair · /api/v1/sessions"]
+    WR["Workflow Runner\n(Playwright Step Executor)"]
+    EC["Evidence Collector"]
+    DD["DOM Differ\n(difflib unified_diff)"]
+    SD["Screenshot Differ\n(PIL + NumPy)"]
+    RA["Repair Agent\n(GPT-4o Planner & Ranker)"]
+    TF["TinyFish Integration Layer"]
+    B["Browser API\n(Cloud CDP Session)"]
+    WA["Web Agent\n(Goal-directed SSE)"]
+    SF["Search + Fetch API\n(Doc retrieval & page parsing)"]
+    RV["Replay & Verification Engine"]
+    SC["Recovery Scorecard"]
+
+    UI <-->|REST / WebSocket| API
+    API --> WR
+    WR -->|FAILURE DETECTED| EC
+    EC --> DD
+    EC --> SD
+    DD --> RA
+    SD --> RA
+    RA --> TF
+    TF --> B
+    TF --> WA
+    TF --> SF
+    RA --> RV
+    RV -->|PASS| SC
+    RV -->|FAIL — retry| RA
 ```
 
 ---
 
-## 🔄 The Self-Healing Pipeline
+## <img src="https://api.iconify.design/lucide:workflow.svg?color=%236366f1" width="22" height="22" align="absmiddle" /> &nbsp;The Self-Healing Pipeline
 
-```
-                        ╔══════════════════════════════╗
-                        ║   Browser Workflow Defined   ║
-                        ║   (Playwright Actions)       ║
-                        ╚══════════════╦═══════════════╝
-                                       ║
-                                       ▼
-                        ╔══════════════════════════════╗
-                        ║      Execute Workflow         ║
-                        ║   Step 1 → Step 2 → Step N   ║
-                        ╚══════╦═══════════════╦════════╝
-                               ║               ║
-                         SUCCESS ✅         FAILURE ❌
-                               ║               ║
-                               ▼               ▼
-                        ┌──────────┐   ╔══════════════════════════╗
-                        │  Done ✅  │   ║  Evidence Capture        ║
-                        └──────────┘   ║  • DOM Snapshot          ║
-                                       ║  • Screenshot (base64)   ║
-                                       ║  • Error + Selector      ║
-                                       ╚══════════╦═══════════════╝
-                                                  ║
-                                                  ▼
-                                       ╔══════════════════════════╗
-                                       ║  TinyFish Browser API    ║
-                                       ║  Inspect Live Page       ║
-                                       ║  • Fresh DOM snapshot    ║
-                                       ║  • Live screenshot       ║
-                                       ╚══════════╦═══════════════╝
-                                                  ║
-                                                  ▼
-                                       ╔══════════════════════════╗
-                                       ║   Diff Engines           ║
-                                       ║  ┌──────────────────┐   ║
-                                       ║  │  DOM Differ      │   ║
-                                       ║  │  unified_diff()  │   ║
-                                       ║  ├──────────────────┤   ║
-                                       ║  │ Screenshot Diff  │   ║
-                                       ║  │ PIL + numpy      │   ║
-                                       ║  └──────────────────┘   ║
-                                       ╚══════════╦═══════════════╝
-                                                  ║
-                                                  ▼
-                                       ╔══════════════════════════╗
-                                       ║  LLM Repair Planner      ║
-                                       ║  (GPT-4o / gpt-4o-mini) ║
-                                       ║  • DOM diff as context   ║
-                                       ║  • Screenshot diff score ║
-                                       ║  • Error message         ║
-                                       ║  → Repair candidates[]   ║
-                                       ║  → Confidence scores     ║
-                                       ║  → Reasoning             ║
-                                       ╚══════════╦═══════════════╝
-                                                  ║
-                              ┌───────────────────┼────────────────────┐
-                              ║                   ║                    ║
-                       confidence               medium            low (<0.4)
-                       ≥ 0.4                   → retry             → STOP
-                              ║                                        ║
-                              ▼                                        ▼
-                    ╔═══════════════════╗                   ╔══════════════════╗
-                    ║  Apply Repair     ║                   ║  Escalate        ║
-                    ║  Best Candidate   ║                   ║  "Cannot repair  ║
-                    ║  selector         ║                   ║   confidently"   ║
-                    ╚═════════╦═════════╝                   ╚══════════════════╝
-                              ║
-                              ▼
-                    ╔═══════════════════╗
-                    ║  Replay Workflow  ║
-                    ║  (from step N)    ║
-                    ╚═════════╦═════════╝
-                              ║
-                   ┌──────────┴──────────┐
-               PASS ✅              FAIL ❌
-                   ║                     ║
-                   ▼                     ▼
-         ╔═══════════════╗      ╔════════════════╗
-         ║  Recovery     ║      ║   Retry with   ║
-         ║  Scorecard    ║      ║ next candidate ║
-         ╚═══════════════╝      ╚════════════════╝
+```mermaid
+flowchart TD
+    A["Browser Workflow Defined\n(Playwright Actions)"] --> B["Execute Workflow\nStep 1 → Step 2 → Step N"]
+    B -->|SUCCESS| C["Workflow Complete"]
+    B -->|FAILURE| D["Evidence Capture\nDOM Snapshot · Screenshot · Error + Selector"]
+    D --> E["TinyFish Browser API\nInspect Live Page — Fresh DOM + Screenshot"]
+    E --> F["Diff Engines"]
+    F --> G["DOM Differ\ndifflib.unified_diff()"]
+    F --> H["Screenshot Differ\nPIL ImageChops + NumPy"]
+    G --> I["LLM Repair Planner\nGPT-4o — DOM diff + screenshot score + error → candidates"]
+    H --> I
+    I -->|"confidence < 0.4"| J["Escalate\nCannot repair confidently — surface failure"]
+    I -->|"confidence ≥ 0.4"| K["Apply Best Candidate\nReplace broken selector"]
+    K --> L["Replay Workflow\nFrom failed step N"]
+    L -->|PASS| M["Recovery Scorecard\nLatency · Attempts · Locator changes · Output correctness"]
+    L -->|FAIL| N["Retry with next candidate\nUp to MAX_REPAIR_RETRIES"]
+    N --> K
 ```
 
 ---
 
-## 🐟 TinyFish Integration — The Core Enabler
+## <img src="https://api.iconify.design/simple-icons:fish.svg?color=%230ea5e9" width="22" height="22" align="absmiddle" /> &nbsp;TinyFish Integration — The Core Enabler
 
 WebMender AI integrates **all four TinyFish capabilities** as first-class infrastructure:
 
 | Capability | How WebMender Uses It | Why It's Indispensable |
 |---|---|---|
-| **🌐 Browser API** | Spins up a cloud-browser to execute workflows in a real environment. Captures live DOM snapshots and screenshots after failure. | Without real browser execution, we can't observe actual failures or gather live evidence. |
-| **🤖 Web Agent** | `POST /v1/automation/run-sse` — explores the broken page with a natural-language goal to discover the alternative interaction path. | The agent discovers elements that CSS selectors can't predict — aria labels, text content, contextual layout. |
-| **🔍 Search API** | Retrieves public documentation or changelogs when a site's update notes are publicly available, enriching the LLM's repair context. | Optional but powerful — gives the LLM external signal beyond the DOM. |
-| **📄 Fetch API** | Extracts clean, AI-ready page content in markdown format to supplement the DOM diff with readable text context. | Gives the LLM a human-readable view of the page alongside raw HTML. |
+| **Browser API** | Spins up a cloud-browser session to execute workflows in a real environment and captures live DOM snapshots and screenshots after failure. | Without real browser execution, actual failures cannot be observed and live evidence cannot be gathered. |
+| **Web Agent** | `POST /v1/automation/run-sse` — explores the broken page with a natural-language goal to discover the alternative interaction path. | The agent finds elements that CSS selectors cannot predict — aria labels, text content, contextual layout. |
+| **Search API** | Retrieves public documentation or changelogs when a site's update notes are publicly available, enriching the LLM's repair context. | Gives the LLM external signal beyond the DOM — optional but powerful. |
+| **Fetch API** | Extracts clean, AI-ready page content in markdown format to supplement the DOM diff with readable text context. | Gives the LLM a human-readable view of the page alongside raw HTML. |
 
 ```python
 # TinyFish Web Agent exploration — called during repair
@@ -199,58 +126,58 @@ async for event in tinyfish.run_web_agent(
 
 ---
 
-## 📁 Project Structure
+## <img src="https://api.iconify.design/lucide:folder-tree.svg?color=%2322c55e" width="22" height="22" align="absmiddle" /> &nbsp;Project Structure
 
 ```
 webmender-ai/
 │
-├── 📂 backend/                    # FastAPI Orchestration Server
+├── backend/                        # FastAPI Orchestration Server
 │   ├── app/
-│   │   ├── main.py                # App entrypoint, CORS, router registration
+│   │   ├── main.py                 # App entrypoint, CORS, router registration
 │   │   ├── core/
-│   │   │   └── config.py          # Pydantic settings (TinyFish keys, LLM config)
+│   │   │   └── config.py           # Pydantic settings (TinyFish keys, LLM config)
 │   │   ├── models/
-│   │   │   └── schemas.py         # All Pydantic schemas: Workflow, Failure, Repair, Scorecard
+│   │   │   └── schemas.py          # All Pydantic schemas: Workflow, Failure, Repair, Scorecard
 │   │   ├── agents/
-│   │   │   └── repair_agent.py    # 🧠 AI repair planner (LLM + evidence → candidates)
+│   │   │   └── repair_agent.py     # AI repair planner (LLM + evidence → candidates)
 │   │   ├── services/
-│   │   │   ├── tinyfish_service.py   # 🐟 TinyFish Browser/Agent/Search/Fetch wrapper
-│   │   │   ├── workflow_runner.py    # Playwright executor + failure capture + repair loop
-│   │   │   ├── dom_differ.py         # DOM snapshot diff engine
-│   │   │   └── screenshot_differ.py  # Pixel-level screenshot comparison (PIL + numpy)
+│   │   │   ├── tinyfish_service.py # TinyFish Browser / Agent / Search / Fetch wrapper
+│   │   │   ├── workflow_runner.py  # Playwright executor + failure capture + repair loop
+│   │   │   ├── dom_differ.py       # DOM snapshot diff engine
+│   │   │   └── screenshot_differ.py# Pixel-level screenshot comparison (PIL + NumPy)
 │   │   └── api/routes/
-│   │       ├── workflows.py       # POST /workflows/run, GET /workflows/definitions
-│   │       ├── repair.py          # GET/POST /repair/{session_id}
-│   │       ├── sessions.py        # GET /sessions/{session_id} — poll for scorecard
-│   │       └── health.py          # GET /health
+│   │       ├── workflows.py        # POST /workflows/run, GET /workflows/definitions
+│   │       ├── repair.py           # GET /POST /repair/{session_id}
+│   │       ├── sessions.py         # GET /sessions/{session_id} — poll for scorecard
+│   │       └── health.py           # GET /health
 │   ├── requirements.txt
 │   └── .env.example
 │
-├── 📂 frontend/                   # React Dashboard (React Flow + Tailwind)
+├── frontend/                       # React Dashboard (React Flow + Tailwind)
 │   └── src/
 │       ├── components/
-│       │   ├── dashboard/         # KPI cards, timeline, status indicators
-│       │   └── workflow/          # React Flow workflow visualizer
-│       ├── pages/                 # Main pages: Dashboard, Sessions, Repair View
-│       └── hooks/                 # useWorkflow, useRepair, useScorecard
+│       │   ├── dashboard/          # KPI cards, timeline, status indicators
+│       │   └── workflow/           # React Flow workflow visualizer
+│       ├── pages/                  # Dashboard, Sessions, Repair View
+│       └── hooks/                  # useWorkflow, useRepair, useScorecard
 │
-├── 📂 demo/                       # Controlled demo environment
+├── demo/                           # Controlled demo environment
 │   ├── pages/
-│   │   ├── version_a/index.html   # ✅ Original page — workflow SUCCEEDS
-│   │   └── version_b/index.html   # ❌ Modified page — triggers self-healing
+│   │   ├── version_a/index.html    # Original page — workflow succeeds
+│   │   └── version_b/index.html    # Modified page — triggers self-healing
 │   └── workflows/
-│       └── demo_spec_scraper.py   # End-to-end demo runner
+│       └── demo_spec_scraper.py    # End-to-end demo runner
 │
-└── 📄 README.md
+└── README.md
 ```
 
 ---
 
-## 🧠 AI/ML Architecture Deep Dive
+## <img src="https://api.iconify.design/lucide:brain-circuit.svg?color=%23a855f7" width="22" height="22" align="absmiddle" /> &nbsp;AI/ML Architecture Deep Dive
 
 ### Repair Agent Intelligence
 
-The repair agent is not a brute-force retry machine. It reasons:
+The repair agent is not a brute-force retry machine. It reasons from structured evidence:
 
 ```
 EVIDENCE IN:
@@ -265,116 +192,40 @@ LLM REASONING:
   "The original button with id 'btn-specifications' and text 'Specifications' has been
    replaced by a button with id 'tech-details-btn' and text 'Technical Details'.
    This is a rename with high semantic equivalence. CSS selector #tech-details-btn
-   is the most reliable repair; text-based selector 'button:text("Technical Details")'
+   is the most reliable repair; text-based selector button:has-text('Technical Details')
    is the fallback."
 
 CANDIDATES OUT (ranked by confidence):
-  1. CSS:   #tech-details-btn           — confidence: 0.95
-  2. Text:  button:has-text("Technical Details")  — confidence: 0.88
-  3. XPath: //button[contains(text(),'Technical')]  — confidence: 0.71
+  1. CSS:   #tech-details-btn                              — confidence: 0.95
+  2. Text:  button:has-text("Technical Details")           — confidence: 0.88
+  3. XPath: //button[contains(text(),'Technical')]         — confidence: 0.71
 ```
 
 ### Multimodal Evidence Pipeline
 
-```
-Screenshot Before  ──┐
-Screenshot After   ──┤──► PIL ImageChops.difference()
-                      │    numpy pixel analysis
-                      │    Regional change heatmap
-                      └──► Diff Score ∈ [0.0, 1.0]
+```mermaid
+flowchart LR
+    SB["Screenshot Before"]
+    SA["Screenshot After"]
+    DB["DOM Snapshot Before"]
+    DA["DOM Snapshot After"]
 
-DOM Before         ──┐
-DOM After          ──┤──► difflib.unified_diff()
-                      │    Noise attribute stripping
-                      │    Interactive element extraction
-                      └──► Structured diff string
+    SB --> PIL["PIL ImageChops.difference()\nNumPy pixel analysis\nRegional change heatmap"]
+    SA --> PIL
+    PIL --> DS["Diff Score\n0.0 identical → 1.0 different"]
 
-Both signals       ──► GPT-4o Repair Planner
-                        → JSON repair candidates[]
-```
+    DB --> DIFF["difflib.unified_diff()\nNoise attribute stripping\nInteractive element extraction"]
+    DA --> DIFF
+    DIFF --> DD["Structured DOM Diff String"]
 
----
-
-## 📊 Recovery Scorecard — What Judges See
-
-After every self-healing cycle, WebMender emits a machine-readable **Recovery Scorecard**:
-
-```json
-{
-  "workflow_id": "demo-spec-scraper",
-  "session_id": "a3f1c2d9-...",
-  "status": "verified",
-  "total_actions": 4,
-  "failed_at_index": 2,
-  "repair_attempts": 1,
-  "recovery_latency_ms": 4821,
-  "output_correctness": true,
-  "locator_changes": [
-    {
-      "original": "#btn-specifications",
-      "repaired": "#tech-details-btn",
-      "confidence": "0.95"
-    }
-  ],
-  "repair_plan": {
-    "dom_diff_summary": "47 changed lines...",
-    "screenshot_diff_score": 0.312,
-    "selected_candidate": {
-      "locator_type": "css",
-      "locator_value": "#tech-details-btn",
-      "confidence": 0.95,
-      "reasoning": "Renamed button with identical semantic role"
-    },
-    "llm_explanation": "Button 'Specifications' renamed to 'Technical Details'..."
-  }
-}
+    DS --> LLM["GPT-4o Repair Planner"]
+    DD --> LLM
+    LLM --> OUT["JSON Repair Candidates\nlocator · confidence · reasoning"]
 ```
 
 ---
 
-## 🎬 The Winning Demo Flow
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    LIVE DEMO SEQUENCE                               │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  PHASE 1: Baseline (Version A — Original Page)                      │
-│  ─────────────────────────────────────────────                      │
-│  ① Open Version A in TinyFish cloud browser                        │
-│  ② Run Playwright workflow → click #btn-specifications              │
-│  ③ Watch: specs table loads ✅                                       │
-│  ④ Show: workflow trace, green status                               │
-│                                                                     │
-│  PHASE 2: The Break (Version B — Modified Page)                     │
-│  ───────────────────────────────────────────────                    │
-│  ⑤ Switch to Version B (button renamed, layout changed)            │
-│  ⑥ Re-run exact same workflow → TimeoutError ❌                     │
-│  ⑦ Show: failure capture, error trace                              │
-│                                                                     │
-│  PHASE 3: Self-Healing (WebMender takes over)                       │
-│  ─────────────────────────────────────────────                      │
-│  ⑧ TinyFish Browser re-inspects the live page                      │
-│  ⑨ DOM diff highlights removed/added elements                      │
-│  ⑩ Screenshot diff shows visual change score: 0.31                 │
-│  ⑪ LLM generates repair candidates with confidence                 │
-│  ⑫ Best candidate applied: #tech-details-btn (conf: 0.95)          │
-│                                                                     │
-│  PHASE 4: Verification & Scorecard                                  │
-│  ──────────────────────────────────                                 │
-│  ⑬ Repaired workflow replays → specs load ✅                         │
-│  ⑭ Recovery Scorecard displayed:                                   │
-│     • Recovery latency: ~4.8s                                       │
-│     • Repair attempts: 1                                            │
-│     • Output correctness: ✅                                        │
-│     • Locator change: #btn-specifications → #tech-details-btn       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🛠️ Tech Stack
+## <img src="https://api.iconify.design/lucide:layers.svg?color=%236366f1" width="22" height="22" align="absmiddle" /> &nbsp;Tech Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
@@ -382,7 +233,7 @@ After every self-healing cycle, WebMender emits a machine-readable **Recovery Sc
 | **Browser Automation** | Playwright (async) | Execute and replay browser workflows |
 | **Cloud Browser** | TinyFish Browser API | Real browser execution in the cloud |
 | **Web Exploration** | TinyFish Web Agent | Goal-directed page exploration via SSE |
-| **Web Intelligence** | TinyFish Search + Fetch | Documentation retrieval & page parsing |
+| **Web Intelligence** | TinyFish Search + Fetch | Documentation retrieval and page parsing |
 | **AI Repair Planner** | OpenAI GPT-4o | Multimodal reasoning for locator repair |
 | **DOM Diffing** | Python `difflib` | Structural DOM change detection |
 | **Visual Diffing** | Pillow + NumPy | Pixel-level screenshot comparison |
@@ -392,7 +243,7 @@ After every self-healing cycle, WebMender emits a machine-readable **Recovery Sc
 
 ---
 
-## 🚀 Quick Start
+## <img src="https://api.iconify.design/lucide:terminal.svg?color=%2322c55e" width="22" height="22" align="absmiddle" /> &nbsp;Quick Start
 
 ### Prerequisites
 
@@ -417,7 +268,6 @@ uvicorn app.main:app --reload --port 8000
 ### 2. Demo Pages Server
 
 ```bash
-# Serve the controlled demo pages on port 8080
 cd demo/pages
 python -m http.server 8080
 ```
@@ -439,11 +289,11 @@ npm run dev
 
 ### 5. API Explorer
 
-Visit **http://localhost:8000/api/docs** for the interactive Swagger UI.
+Visit `http://localhost:8000/api/docs` for the interactive Swagger UI.
 
 ---
 
-## 🔌 API Reference
+## <img src="https://api.iconify.design/lucide:plug-zap.svg?color=%230ea5e9" width="22" height="22" align="absmiddle" /> &nbsp;API Reference
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -455,70 +305,45 @@ Visit **http://localhost:8000/api/docs** for the interactive Swagger UI.
 | `POST` | `/api/v1/repair/{id}/accept` | Accept a repair and trigger replay |
 | `POST` | `/api/v1/repair/{id}/reject` | Reject repair — escalate as unrecoverable |
 
-**Interactive docs:** `http://localhost:8000/api/docs`
+---
+
+## <img src="https://api.iconify.design/lucide:globe.svg?color=%2322c55e" width="22" height="22" align="absmiddle" /> &nbsp;Real-World Use Cases
+
+**Enterprise QA Automation**
+Stop paying engineers to update selectors after every UI redesign. WebMender repairs them automatically and logs every change with a full audit trail.
+
+**Production AI Agents**
+Your GPT-powered web agent breaks every time the target website updates. WebMender wraps it with a reliability layer that self-heals in real time.
+
+**Web Scraping Pipelines**
+Data pipelines that break on layout changes get expensive fast. WebMender recovers them and emits structured change audit trails.
+
+**Regression Testing**
+Catch unintended UI changes before your QA team does — by running WebMender as part of your CI/CD pipeline.
 
 ---
 
-## 🌐 Real-World Use Cases
+## <img src="https://api.iconify.design/lucide:map.svg?color=%23f59e0b" width="22" height="22" align="absmiddle" /> &nbsp;Roadmap
 
-```
-  🏢 Enterprise QA Automation
-     Stop paying engineers to update selectors after every UI redesign.
-     WebMender repairs them automatically and logs every change.
+```mermaid
+flowchart LR
+    P1["Phase 1 — Hackathon MVP\nSingle workflow\nControlled demo pages\nLLM repair loop\nRecovery scorecard"]
+    P2["Phase 2 — Q1 2027\nWorkflow library\nConcurrent workflows\nRepair history DB\nGitHub Actions integration"]
+    P3["Phase 3 — Q3 2027\nSaaS platform\nTeam dashboards\nFine-tuned repair model\nChrome extension"]
 
-  🤖 Production AI Agents
-     Your GPT-powered web agent breaks every time the target website updates.
-     WebMender wraps it with a reliability layer that self-heals in real time.
-
-  📊 Web Scraping Pipelines
-     Data pipelines that break on layout changes get expensive fast.
-     WebMender recovers them and emits structured change audit trails.
-
-  🧪 Regression Testing
-     Catch unintended UI changes before your QA team does —
-     by running WebMender as part of your CI/CD pipeline.
-```
-
----
-
-## 📈 Long-Term Roadmap
-
-```
-Phase 1 (Hackathon MVP) ────────────────────────────────── ✅ NOW
-  Single workflow · controlled demo pages · LLM repair · scorecard
-
-Phase 2 (Post-Hackathon) ─────────────────────────────── 🔜 Q1 2027
-  Workflow library · multiple concurrent workflows · repair history DB
-  VS Code extension · GitHub Actions integration
-
-Phase 3 (Product) ────────────────────────────────────── 🔜 Q3 2027
-  SaaS platform · team dashboards · enterprise SSO
-  Fine-tuned repair model (trained on repair history)
-  Chrome extension for one-click workflow recording
+    P1 --> P2 --> P3
 ```
 
 ---
 
-## 👥 Team
-
-| Name | Role |
-|---|---|
-| **BugByte League** | Kritical Hacks 2026 · AI/ML Track · Student Category |
-
----
-
-## 🏆 Built For
+## <img src="https://api.iconify.design/lucide:trophy.svg?color=%23f59e0b" width="22" height="22" align="absmiddle" /> &nbsp;Built For
 
 <div align="center">
 
-**Kritical Hacks 2026**  
-Indira Gandhi Delhi Technical University for Women (IGDTUW)  
-AI/ML Track — Open Innovation  
+**Kritical Hacks 2026**
+Indira Gandhi Delhi Technical University for Women (IGDTUW)
+AI/ML Track — Open Innovation
 
-*Mandatory TinyFish Integration: ✅ Browser · ✅ Web Agent · ✅ Search · ✅ Fetch*
-
----
-
-<sub>WebMender AI · Kritical Hacks 2026 · Built with ❤️ in 24 hours</sub>
+*Mandatory TinyFish Integration: Browser · Web Agent · Search · Fetch*
 
 </div>
